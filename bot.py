@@ -7,6 +7,8 @@ from requests import get
 
 
 def main_botwork():
+
+    # функция добавление групп
     def add_groups(ev):
         current_event = ev
         text = 'Введи ID групп через пробел, которые ты хочешь добавить\n' \
@@ -32,6 +34,7 @@ def main_botwork():
                                      random_id=random.randint(0, 2 ** 64))
                     return event.obj.message['text']
 
+    # функция удаления групп
     def delete_groups(ev):
         current_event = ev
         text = 'Введи группы, которые ты хочешь удалить.\n' \
@@ -64,6 +67,7 @@ def main_botwork():
                                      random_id=random.randint(0, 2 ** 64))
                     return event.obj.message['text']
 
+    # функция добавления плохих хештегов
     def add_hashtags(ev):
         current_event = ev
         text = 'Введи плохие хештеги, которые ты хочешь добавить\n' \
@@ -97,6 +101,7 @@ def main_botwork():
                                      message=text,
                                      random_id=random.randint(0, 2 ** 64))
 
+    # функция удаления плохих хештегов
     def delete_hashtags(ev):
         current_event = ev
         text = 'Введи плохие хештеги, которые ты хочешь удалить.\n' \
@@ -139,6 +144,7 @@ def main_botwork():
                                      message=text,
                                      random_id=random.randint(0, 2 ** 64))
 
+    # сценарий добавления нового пользователя
     def new_user(new_id, ev):
         current_event = ev
         user = User()
@@ -172,8 +178,6 @@ def main_botwork():
                     vk.messages.send(user_id=current_event.obj.message['from_id'],
                                      message=text,
                                      random_id=random.randint(0, 2 ** 64))
-
-        print('BAD HASHTAG')
 
         for event in longpoll.listen():
 
@@ -234,6 +238,7 @@ def main_botwork():
                 print('New user! ' + str(event.obj.message['from_id']))
             else:
                 inp = str(event.obj.message['text']).split()
+                # код вывода постов
                 if all(word[0] == '#' for word in inp[:len(inp) - 1]) and inp[-1].isnumeric() and 0 < int(inp[-1]) <= 40:
                     groups = []
 
@@ -302,6 +307,7 @@ def main_botwork():
                                              attachment=att,
                                              random_id=random.randint(0, 2 ** 64))
 
+                # остальные команды, описанные в команде "Помощь"
                 elif str(event.obj.message['text']).capitalize() == 'Плохие хештеги':
                     hashtags = []
 
@@ -433,6 +439,7 @@ def main_botwork():
                     vk.messages.send(user_id=event.obj.message['from_id'],
                                      message=text,
                                      random_id=random.randint(0, 2 ** 64))
+                # если сообщение не распознано
                 else:
                     text = 'Я тебя не понял. Чтобы узнать, какие команды я понимаю, набери "Помощь".'
                     vk.messages.send(user_id=event.obj.message['from_id'],
