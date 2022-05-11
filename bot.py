@@ -4,7 +4,7 @@ import random
 from data import db_session
 from data.users import User
 from requests import get
-
+from time import sleep
 
 def main_botwork():
 
@@ -217,6 +217,7 @@ def main_botwork():
         TOKEN = f[0]
         ID = f[1]
         ACC_TOKEN = f[2]
+        YOUTUBE_API = f[3]
 
     vk_session = vk_api.VkApi(
         token=TOKEN)
@@ -237,9 +238,32 @@ def main_botwork():
                 new_user(event.obj.message['from_id'], event)
                 print('New user! ' + str(event.obj.message['from_id']))
             else:
-                inp = str(event.obj.message['text']).split()
                 # код вывода постов
-                if all(word[0] == '#' for word in inp[:len(inp) - 1]) and inp[-1].isnumeric() and 0 < int(inp[-1]) <= 40:
+                inp = str(event.obj.message['text']).split()
+                if inp[0].capitalize() == 'Ютуб' and inp[-1].isnumeric():
+                    count = inp[-1]
+                    channel = inp[1]
+                    req = ' '.join(inp[2:len(inp) - 1])
+                    param = {"key": YOUTUBE_API,
+                             "channelId": channel,
+                             "maxResults": count,
+                             "q": str(req.replace("|", "%7C")).replace(" ", "+")}
+                    res = get('https://www.googleapis.com/youtube/v3/search?', params=param).json()
+                    try:
+                        for i in range(len(res['items'])):
+                            video_id = res['items'][i]['id']['videoId']
+                            text = f'Видео номер {i + 1} из канала {channel} по запросу: {req}.\n' \
+                                   f'https://www.youtube.com/watch?v={video_id}'
+                            vk.messages.send(user_id=event.obj.message['from_id'],
+                                             message=text,
+                                             random_id=random.randint(0, 2 ** 64))
+                    except KeyError:
+                        text = 'Ошибка. Может, вы ошиблись в ID канала или попробуйте изменить запрос. \n(учтите, что русские символы не работают)'
+                        vk.messages.send(user_id=event.obj.message['from_id'],
+                                         message=text,
+                                         random_id=random.randint(0, 2 ** 64))
+
+                elif all(word[0] == '#' for word in inp[:len(inp) - 1]) and inp[-1].isnumeric() and 0 < int(inp[-1]) <= 40:
                     groups = []
 
                     for user in db_sess.query(User).filter(User.id == event.obj.message['from_id']):
@@ -435,6 +459,8 @@ def main_botwork():
                            '* "Добавить группы" - добавление групп к их общему списку\n' \
                            '* "Удалить плохие хештеги" - удаление выбранных плохих хештегов с их списка\n' \
                            '* "Удалить группы" - удаление групп с их списка\n' \
+                           '* "Ютуб (id канала) (слова) (кол-во видео)" - найти определённое количество видео ' \
+                           'с ведённого канала по заданным словам\n' \
 
                     vk.messages.send(user_id=event.obj.message['from_id'],
                                      message=text,
